@@ -1,11 +1,3 @@
-//
-//  Cxt.rb
-//  cxt
-//
-//  Created by Norikazu Muramoto on 2025/01/16.
-//
-
-
 class Cxt < Formula
   desc "Concatenate files with specified extension and copy to clipboard as markdown"
   homepage "https://github.com/1amageek/cxt"
