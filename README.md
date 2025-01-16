@@ -12,22 +12,9 @@ A command-line tool to concatenate files with specified extension and copy to cl
 
 ## Installation
 
-### Using Homebrew
-
 ```bash
-brew tap 1amageek/cxt
-brew install cxt
-```
-
-### Manual Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/1amageek/cxt.git
-cd cxt
-
-# Run the install script
-./scripts/install.sh
+brew tap 1amageek/cxt https://github.com/1amageek/cxt.git
+brew install 1amageek/cxt
 ```
 
 ## Usage
@@ -80,10 +67,6 @@ base_path: /path/to/directory
 
 - macOS 14.0 or later
 - Xcode 14.0 or later
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
