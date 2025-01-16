@@ -6,14 +6,14 @@ import AppKit
 struct CXT: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "cxt",
-        abstract: "Concatenate files with specified extension and copy to clipboard as markdown"
+        abstract: "Concatenate files with specified extensions and copy to clipboard as markdown"
     )
     
     @Argument(
-        help: "File extension to search for (without dot)",
+        help: "File extensions to search for (comma-separated, without dots)",
         completion: .none
     )
-    var fileExtension: String
+    var fileExtensions: String
     
     @Argument(
         help: "Directory path to search in (supports ~ for home directory)",
@@ -24,6 +24,7 @@ struct CXT: ParsableCommand {
     mutating func run() throws {
         let fileManager = FileManager.default
         let resolvedPath = (directoryPath as NSString).expandingTildeInPath
+        let extensions = fileExtensions.split(separator: ",").map(String.init)
         
         // Get current date for frontmatter
         let dateFormatter = DateFormatter()
@@ -42,7 +43,7 @@ struct CXT: ParsableCommand {
         var markdownContent = """
         ---
         created_at: \(currentDate)
-        extension: \(fileExtension)
+        extensions: [\(extensions.map { "." + $0 }.joined(separator: ", "))]
         base_path: \(resolvedPath)
         ---
         
@@ -52,7 +53,7 @@ struct CXT: ParsableCommand {
         var files: [(url: URL, relativePath: String)] = []
         
         for case let fileURL as URL in enumerator {
-            guard fileURL.pathExtension == fileExtension else { continue }
+            guard extensions.contains(fileURL.pathExtension) else { continue }
             
             // Calculate relative path from base directory
             let fullPath = fileURL.path
@@ -74,7 +75,7 @@ struct CXT: ParsableCommand {
                 
                 # \(relativePath)
                 
-                ```\(fileExtension)
+                ```\(fileURL.pathExtension)
                 \(content)
                 ```
                 
@@ -89,8 +90,11 @@ struct CXT: ParsableCommand {
         pasteboard.clearContents()
         pasteboard.setString(markdownContent, forType: .string)
         
-        print("Content from \(fileExtension) files has been copied to clipboard as markdown")
-        print("Found \(files.count) files with extension .\(fileExtension)")
+        // Generate summary message
+        let extensionsStr = extensions.map { "." + $0 }.joined(separator: ", ")
+        let fileCount = files.count
+        let fileWord = fileCount == 1 ? "file" : "files"
+        print("Content from \(fileCount) \(fileWord) with extensions \(extensionsStr) has been copied to clipboard as markdown")
     }
 }
 
