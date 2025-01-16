@@ -90,11 +90,10 @@ struct CXT: ParsableCommand {
         pasteboard.clearContents()
         pasteboard.setString(markdownContent, forType: .string)
         
-        // Generate summary message
-        let extensionsStr = extensions.map { "." + $0 }.joined(separator: ", ")
+        // Generate success message
         let fileCount = files.count
-        let fileWord = fileCount == 1 ? "file" : "files"
-        print("Content from \(fileCount) \(fileWord) with extensions \(extensionsStr) has been copied to clipboard as markdown")
+        let extensionsStr = extensions.map { "." + $0 }.joined(separator: ", ")
+        print("✨ Done! Copied \(fileCount) files (\(extensionsStr))")
     }
 }
 
