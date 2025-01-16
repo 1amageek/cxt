@@ -14,7 +14,7 @@ A command-line tool to concatenate files with specified extension and copy to cl
 
 ```bash
 brew tap 1amageek/cxt https://github.com/1amageek/cxt.git
-brew install 1amageek/cxt
+brew install 1amageek/cxt/cxt
 ```
 
 ## Usage
