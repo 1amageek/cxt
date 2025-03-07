@@ -43,7 +43,7 @@ cxt --version
 
 The tool creates a markdown document with the following format:
 
-```markdown
+~~~markdown
 ---
 created_at: 2025-01-16 10:30:00
 extension: swift
@@ -61,7 +61,7 @@ base_path: /path/to/directory
 ```swift
 // Content of file2.swift
 ```
-```
+~~~
 
 ## Requirements
 
