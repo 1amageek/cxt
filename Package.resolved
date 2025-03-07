@@ -1,13 +1,67 @@
 {
-  "originHash" : "48d86d599f7acc8747fad26da2670d2d225a000827ff9d74d71a6096101e68a4",
+  "originHash" : "dc3faa9eb8c79f580c6e1c54cd35e722547fa0db4529adbfd979706df8302016",
   "pins" : [
+    {
+      "identity" : "generative-ai-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/google-gemini/generative-ai-swift.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "31d3eb8b399deb288373b99953a8dec5c11bcb57"
+      }
+    },
+    {
+      "identity" : "ollamakit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/1amageek/OllamaKit.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "16b30e8f8b2f48dbf169e5ada274478680ea2d8c"
+      }
+    },
     {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser.git",
       "state" : {
         "branch" : "main",
-        "revision" : "41d58ffe702cfe7b00b2c4c6a6611d9d25a0adc1"
+        "revision" : "d67151befa39533a6a449136c7992537cbf8ec99"
+      }
+    },
+    {
+      "identity" : "swift-json-schema",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/1amageek/swift-json-schema.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "ef7c71dcae944c18792a2164501394d111501004"
+      }
+    },
+    {
+      "identity" : "swift-llm-chat-openai",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/1amageek/swift-llm-chat-openai.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "db4c398a13bb4799c51bab8feea109a9aad2e782"
+      }
+    },
+    {
+      "identity" : "swiftagent",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/1amageek/SwiftAgent.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "5d3f7ca2903e6da17de2459d2e96a12c1c686b0c"
+      }
+    },
+    {
+      "identity" : "swiftanthropic",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/jamesrochabrun/SwiftAnthropic.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "e71ff4df0a2ab4e85fb492f02322980858a8157c"
       }
     }
   ],
