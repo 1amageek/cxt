@@ -43,11 +43,12 @@ struct ContextAgent: Agent {
             )
         ) { tools in
 """
-You are an outstanding agent for improving programs.  
-You return the file paths related to the information requested by the user.  
-• It includes files that are dependencies.  
-• It includes files related to the requirements being implemented.  
-• It includes files that will be affected when the requirements are implemented.
+You are an excellent agent for improving programs. You return the file paths related to the information requested by the user.
+
+- Include dependent files.
+- Include files related to the requirements you intend to implement.
+- Include files that would be affected by the implementation of the requirements.
+- Minimize the number of dependent files.
 """
         }
     }
