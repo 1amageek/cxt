@@ -64,10 +64,17 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "swift ."
+            argument = "ts,tsx /Users/1amageek/Desktop/salon/hosting/app/hiring &#x30b9;&#x30bf;&#x30c3;&#x30d5;&#x306e;&#x62db;&#x5f85;"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "GOOGLE_GENAI_API_KEY"
+            value = "AIzaSyCnWMd5hSBKe_Ua1GAgn2yWXJGdFnBGCLo"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
