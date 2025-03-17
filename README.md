@@ -98,6 +98,22 @@ dist/
 *.generated.swift
 ```
 
+### Examples
+
+```bash
+# Process all files including those in node_modules (not recommended for large projects)
+cxt swift,js ./MyProject --no-ignore
+
+# Ignore all test files in addition to default ignores
+cxt swift ./MyProject --ignore-patterns="*_test.swift,*_spec.swift,Tests/"
+
+# Ignore generated files and documentation
+cxt swift,md ./MyProject --ignore-patterns="*.generated.swift,docs/"
+
+# Combine verbose mode with custom ignore patterns
+cxt -v swift ./MyProject --ignore-patterns="build/,*.tmp"
+```
+
 You can disable ignore file processing with the `--no-ignore` flag or add additional patterns with `--ignore-patterns`.
 
 ## Context Filtering
