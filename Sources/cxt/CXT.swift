@@ -12,7 +12,8 @@ struct CXT: AsyncParsableCommand {
         abstract: "Concatenate files and extract related paths for SwiftAgent",
         discussion: """
         This command searches for files with specified extensions, concatenates them with markdown formatting,
-        and extracts related paths based on the provided prompt. By default, it respects .gitignore and .clineignore files.
+        and extracts related paths based on the provided prompt. By default, it respects .gitignore and .clineignore files
+        at every directory level.
         """
     )
     
@@ -53,9 +54,6 @@ struct CXT: AsyncParsableCommand {
     mutating func run() async throws {
         let logger = verbose ? { print($0) } : { _ in }
         
-        // Create file processor
-        let fileProcessor = FileProcessor(logger: logger)
-        
         // Parse extensions
         let extensions = fileExtensions.split(separator: ",").map(String.init)
         
@@ -65,18 +63,26 @@ struct CXT: AsyncParsableCommand {
         logger("Searching for files with extensions: \(extensions.joined(separator: ", "))")
         logger("Base directory: \(resolvedPath)")
         
-        // Process additional ignore patterns
+        // Parse additional ignore patterns
+        var additionalPatternsArray: [String] = []
         if let patterns = ignorePatterns {
-            let additionalPatterns = patterns.split(separator: ",").map(String.init)
-            logger("Additional ignore patterns: \(additionalPatterns.joined(separator: ", "))")
+            additionalPatternsArray = patterns.split(separator: ",").map(String.init)
+            logger("Additional ignore patterns: \(additionalPatternsArray.joined(separator: ", "))")
         }
         
         // Log ignore settings
         if noIgnore {
             logger("Ignore files (.gitignore, .clineignore) will be ignored")
         } else {
-            logger("Respecting .gitignore and .clineignore files")
+            logger("Respecting .gitignore and .clineignore files at all directory levels")
         }
+        
+        // Create file processor with ignore settings
+        let fileProcessor = FileProcessor(
+            logger: logger,
+            respectIgnoreFiles: !noIgnore,
+            additionalPatterns: additionalPatternsArray
+        )
         
         // Scan directory for matching files
         let files = try fileProcessor.scanDirectory(
