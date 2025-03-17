@@ -10,6 +10,8 @@ A command-line tool to concatenate files with specified extensions and copy to c
 - Filter files based on contextual relevance using AI (optional)
 - Copy the result to clipboard
 - Support for code block syntax highlighting
+- Respect `.gitignore` and `.clineignore` files to exclude unnecessary files
+- Skip common directories like `node_modules` by default
 
 ## Installation
 
@@ -60,12 +62,43 @@ cxt swift ./MyProject "Find files related to networking and HTTP requests"
 # Run with verbose output for debugging
 cxt -v swift ./MyProject
 
+# Ignore .gitignore and .clineignore files
+cxt swift ./MyProject --no-ignore
+
+# Add custom ignore patterns
+cxt swift ./MyProject --ignore-patterns="Tests/,*.generated.swift"
+
 # Show help
 cxt --help
 
 # Show version
 cxt --version
 ```
+
+## Ignore File Support
+
+CXT respects the following ignore files:
+
+- `.gitignore` - Standard Git ignore patterns
+- `.clineignore` - Custom ignore patterns specific to CXT
+
+By default, CXT also ignores common directories and files:
+- `node_modules/`
+- `.git/`
+- `.DS_Store`
+- `.build/`
+- `*.xcodeproj`
+
+To create a `.clineignore` file, use the same pattern format as `.gitignore`:
+
+```
+# Example .clineignore file
+node_modules/
+dist/
+*.generated.swift
+```
+
+You can disable ignore file processing with the `--no-ignore` flag or add additional patterns with `--ignore-patterns`.
 
 ## Context Filtering
 
