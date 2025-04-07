@@ -52,7 +52,7 @@
       "location" : "https://github.com/1amageek/SwiftAgent.git",
       "state" : {
         "branch" : "main",
-        "revision" : "5d3f7ca2903e6da17de2459d2e96a12c1c686b0c"
+        "revision" : "ec5fc0d66a7626395dcd1ac8e140a90824e8881f"
       }
     },
     {
@@ -61,7 +61,7 @@
       "location" : "https://github.com/jamesrochabrun/SwiftAnthropic.git",
       "state" : {
         "branch" : "main",
-        "revision" : "e71ff4df0a2ab4e85fb492f02322980858a8157c"
+        "revision" : "c921b625dcbcc0653343ae63c89d1cbfed0bd539"
       }
     }
   ],

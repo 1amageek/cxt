@@ -39,14 +39,8 @@ struct CXT: AsyncParsableCommand {
     )
     var verbose: Bool = false
     
-    @Flag(
-        name: [.long],
-        help: "Ignore .gitignore and .clineignore files"
-    )
-    var noIgnore: Bool = false
-    
     @Option(
-        name: [.long],
+        name: [.short, .long],
         help: "Additional ignore patterns (comma-separated)"
     )
     var ignorePatterns: String?
@@ -70,17 +64,10 @@ struct CXT: AsyncParsableCommand {
             logger("Additional ignore patterns: \(additionalPatternsArray.joined(separator: ", "))")
         }
         
-        // Log ignore settings
-        if noIgnore {
-            logger("Ignore files (.gitignore, .clineignore) will be ignored")
-        } else {
-            logger("Respecting .gitignore and .clineignore files at all directory levels")
-        }
-        
-        // Create file processor with ignore settings
+        // Create file processor (always respect ignore files)
         let fileProcessor = FileProcessor(
             logger: logger,
-            respectIgnoreFiles: !noIgnore,
+            respectIgnoreFiles: true,
             additionalPatterns: additionalPatternsArray
         )
         

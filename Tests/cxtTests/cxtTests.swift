@@ -457,6 +457,44 @@ struct IgnoreMatcherTests {
                 "Regular JS file should not be ignored")
     }
     
+    @Test("IgnoreMatcher excludes node_modules as specified in .gitignore")
+    func testGitignoreNodeModulesExclusion() throws {
+        // 一時ディレクトリを作成
+        let tempDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("ignore_test_node_modules")
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: tempDir)
+        }
+        
+        // .gitignore を作成し、node_modules を除外対象にする
+        let gitignorePath = tempDir.appendingPathComponent(".gitignore")
+        let gitignoreContent = """
+    # Exclude node_modules directory
+    node_modules
+    """
+        try gitignoreContent.write(to: gitignorePath, atomically: true, encoding: .utf8)
+        
+        // IgnoreMatcher を初期化（ignore ファイルを尊重する設定）
+        let mockLogger = MockLogger()
+        let ignoreMatcher = IgnoreMatcher(
+            basePath: tempDir.path,
+            respectIgnoreFiles: true,
+            logger: mockLogger.log,
+            additionalPatterns: []
+        )
+        ignoreMatcher.loadDefaultIgnorePatterns()
+        // 一時ディレクトリ内の .gitignore を読み込む
+        ignoreMatcher.loadIgnoreFilesAt(tempDir.path)
+        
+        // "node_modules" およびその配下のパスは除外されるはず
+        #expect(ignoreMatcher.shouldIgnorePath("node_modules"), "The node_modules directory should be ignored")
+        #expect(ignoreMatcher.shouldIgnorePath("node_modules/some_module/index.js"), "Files under node_modules should be ignored")
+        
+        // 一方、別ディレクトリ内の node_modules という文字列が含まれるパスは除外されない（.gitignore の対象ではない）
+        #expect(!ignoreMatcher.shouldIgnorePath("src/node_modules/file.js"), "Files in non-target directories should not be ignored")
+    }
+    
+    
     @Test("IgnoreMatcher loads single ignore file correctly")
     func testLoadSingleIgnoreFile() throws {
         // テスト固有のディレクトリ名を使用
