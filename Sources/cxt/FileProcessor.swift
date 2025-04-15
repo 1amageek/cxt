@@ -39,7 +39,7 @@ struct FileProcessor {
     /// - Returns: Array of matched files
     func scanDirectory(path: String, extensions: [String]) throws -> [FileInfo] {
         let fileManager = FileManager.default
-        let directoryURL = URL(fileURLWithPath: path)
+        let _ = URL(fileURLWithPath: path)
         
         // まず、ディレクトリが存在するか確認
         var isDirectory: ObjCBool = false

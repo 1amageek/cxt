@@ -120,14 +120,54 @@ class IgnoreMatcher {
             return false
         }
         
-        // defaultPatterns のチェック
+        // 改善: まずパスの各コンポーネントを取得
+        let pathComponents = relativePath.split(separator: "/").map(String.init)
+        
+        // 各デフォルトパターンをチェック
         for pattern in defaultPatterns {
+            // 直接パターンマッチを試みる
             if pathMatcher.matches(path: relativePath, pattern: pattern) {
+                logger("Path \(relativePath) matched ignore pattern: \(pattern)")
                 return true
+            }
+            
+            // パターンがスラッシュを含む場合は、パスの一部としてもチェック
+            if pattern.contains("/") {
+                let patternComponents = pattern.split(separator: "/").map(String.init)
+                
+                // パターンの最初のコンポーネントが途中に現れるかチェック
+                if patternComponents.count > 0 &&
+                    pathComponents.contains(patternComponents[0]) {
+                    
+                    // 連続するコンポーネントとしてマッチするかチェック
+                    for i in 0...(pathComponents.count - patternComponents.count) {
+                        var allMatch = true
+                        
+                        for j in 0..<patternComponents.count {
+                            if pathComponents[i + j] != patternComponents[j] {
+                                allMatch = false
+                                break
+                            }
+                        }
+                        
+                        if allMatch {
+                            logger("Path \(relativePath) matched directory pattern: \(pattern)")
+                            return true
+                        }
+                    }
+                }
+            }
+            // スラッシュがなく、末尾がスラッシュのパターン (単一ディレクトリ)
+            else if pattern.hasSuffix("/") {
+                let dirName = String(pattern.dropLast())
+                if pathComponents.contains(dirName) {
+                    logger("Path \(relativePath) matched directory name: \(dirName)")
+                    return true
+                }
             }
         }
         
-        // ignoreFiles から読み込んだパターンもチェック
+        // ignoreFilesから読み込んだパターンもチェック
         for (_, patterns) in ignorePatterns {
             for pattern in patterns {
                 if pathMatcher.matches(path: relativePath, pattern: pattern) {
