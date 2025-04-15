@@ -14,6 +14,11 @@ struct CXT: AsyncParsableCommand {
         This command searches for files with specified extensions, concatenates them with markdown formatting,
         and extracts related paths based on the provided prompt. By default, it respects .gitignore and .clineignore files
         at every directory level.
+        
+        Ignore patterns:
+        - Directory patterns like "components/ui" will match both that exact directory and all its subdirectories
+        - You can use patterns like "*.log" to ignore all log files
+        - Path patterns with slashes will match at any directory level
         """
     )
     
@@ -41,7 +46,7 @@ struct CXT: AsyncParsableCommand {
     
     @Option(
         name: [.short, .long],
-        help: "Additional ignore patterns (comma-separated)"
+        help: "Additional ignore patterns (comma-separated, e.g. 'node_modules,components/ui')"
     )
     var ignorePatterns: String?
     

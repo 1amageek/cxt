@@ -20,6 +20,9 @@ class IgnoreMatcher {
     /// Default ignore patterns (applied globally)
     internal var defaultPatterns: [String] = []
     
+    /// Path matcher for handling glob pattern matching
+    private let pathMatcher: PathMatcher
+    
     /// Initialize with base path and ignore options
     /// - Parameters:
     ///   - basePath: Base directory path
@@ -37,6 +40,7 @@ class IgnoreMatcher {
         self.respectIgnoreFiles = respectIgnoreFiles
         self.logger = logger
         self.additionalPatterns = additionalPatterns
+        self.pathMatcher = PathMatcher(logger: logger)
     }
     
     /// Load default ignore patterns
@@ -50,8 +54,12 @@ class IgnoreMatcher {
             ".build/"
         ]
         
+        // Add common patterns and additional patterns
         defaultPatterns.append(contentsOf: commonIgnores)
-        defaultPatterns.append(contentsOf: additionalPatterns)
+        
+        // Normalize additional patterns and add them
+        let normalizedAdditionalPatterns = pathMatcher.normalizePatterns(additionalPatterns)
+        defaultPatterns.append(contentsOf: normalizedAdditionalPatterns)
         
         logger("Loaded \(defaultPatterns.count) default and additional ignore patterns")
     }
@@ -89,7 +97,9 @@ class IgnoreMatcher {
         
         // Store patterns for this directory if any were found
         if !patterns.isEmpty {
-            ignorePatterns[directoryPath] = patterns
+            // Normalize patterns before storing
+            let normalizedPatterns = pathMatcher.normalizePatterns(patterns)
+            ignorePatterns[directoryPath] = normalizedPatterns
         }
     }
     
@@ -109,175 +119,23 @@ class IgnoreMatcher {
         if relativePath.isEmpty {
             return false
         }
+        
         // defaultPatterns のチェック
         for pattern in defaultPatterns {
-            if matchPatternSimple(pattern: pattern, path: relativePath) {
+            if pathMatcher.matches(path: relativePath, pattern: pattern) {
                 return true
             }
         }
+        
         // ignoreFiles から読み込んだパターンもチェック
         for (_, patterns) in ignorePatterns {
             for pattern in patterns {
-                if matchPatternSimple(pattern: pattern, path: relativePath) {
+                if pathMatcher.matches(path: relativePath, pattern: pattern) {
                     return true
                 }
             }
         }
+        
         return false
-    }
-    
-    /// Simple pattern matching function using glob-to-regex conversion.
-    internal func matchPatternSimple(pattern: String, path: String) -> Bool {
-        // Convert glob pattern to regular expression
-        let regexPattern = globToRegex(pattern)
-        do {
-            let regex = try NSRegularExpression(pattern: regexPattern)
-            let range = NSRange(location: 0, length: path.utf16.count)
-            return regex.firstMatch(in: path, options: [], range: range) != nil
-        } catch {
-            logger("Invalid regex for pattern: \(pattern), error: \(error)")
-            return false
-        }
-    }
-    
-    /// Convert a glob pattern into a regular expression.
-    /// パスにスラッシュが含まれるかどうかで変換方法を分岐します。
-    private func globToRegex(_ pattern: String) -> String {
-        // パスにスラッシュが含まれない場合、ファイル名部分として全階層でマッチさせる
-        if !pattern.contains("/") {
-            return "^.*" + nonPathGlobToRegex(pattern) + "$"
-        }
-        
-        var mutablePattern = pattern
-        var prefix = "^"
-        var trailingSlash = false
-        // 末尾がスラッシュの場合は、ディレクトリまたはその配下にマッチさせる
-        if mutablePattern.hasSuffix("/") {
-            trailingSlash = true
-            mutablePattern = String(mutablePattern.dropLast())
-        }
-        
-        // パターンの先頭が "**/" なら、先頭のディレクトリ部分は任意（0文字も可）とする
-        if mutablePattern.hasPrefix("**/") {
-            prefix += "(?:.*/)?"
-            mutablePattern = String(mutablePattern.dropFirst(3))
-        }
-        
-        var regex = ""
-        var i = mutablePattern.startIndex
-        while i < mutablePattern.endIndex {
-            let char = mutablePattern[i]
-            if char == "*" {
-                let nextIndex = mutablePattern.index(after: i)
-                if nextIndex < mutablePattern.endIndex && mutablePattern[nextIndex] == "*" {
-                    // "**" -> 任意の文字列（スラッシュ含む）
-                    regex += ".*"
-                    i = mutablePattern.index(i, offsetBy: 2)
-                } else {
-                    // "*" -> 任意の文字列（スラッシュを除く）
-                    regex += "[^/]*"
-                    i = mutablePattern.index(after: i)
-                }
-            } else if char == "?" {
-                regex += "[^/]"
-                i = mutablePattern.index(after: i)
-            } else if char == "[" {
-                // 文字クラスはそのままコピー
-                var charClass = ""
-                charClass.append(char)
-                i = mutablePattern.index(after: i)
-                while i < mutablePattern.endIndex && mutablePattern[i] != "]" {
-                    charClass.append(mutablePattern[i])
-                    i = mutablePattern.index(after: i)
-                }
-                if i < mutablePattern.endIndex {
-                    charClass.append("]")
-                    i = mutablePattern.index(after: i)
-                }
-                regex += charClass
-            } else {
-                let specialChars = "\\^$.|+(){}"
-                if specialChars.contains(char) {
-                    regex.append("\\")
-                }
-                regex.append(char)
-                i = mutablePattern.index(after: i)
-            }
-        }
-        
-        // 末尾がディレクトリ指定の場合、直後に "/" 以降があってもマッチするようにする
-        if trailingSlash {
-            regex += "(?:/.*)?"
-        }
-        return prefix + regex + "$"
-    }
-    
-    /// glob パターン（スラッシュを含まない）の変換
-    /// "*" は ".*"、"?" は "." として変換し、正規表現の特殊文字はエスケープします。
-    private func nonPathGlobToRegex(_ pattern: String) -> String {
-        var regex = ""
-        var i = pattern.startIndex
-        while i < pattern.endIndex {
-            let char = pattern[i]
-            if char == "*" {
-                regex += ".*"
-                i = pattern.index(after: i)
-            } else if char == "?" {
-                regex += "."
-                i = pattern.index(after: i)
-            } else if char == "[" {
-                var charClass = ""
-                charClass.append(char)
-                i = pattern.index(after: i)
-                while i < pattern.endIndex && pattern[i] != "]" {
-                    charClass.append(pattern[i])
-                    i = pattern.index(after: i)
-                }
-                if i < pattern.endIndex {
-                    charClass.append("]")
-                    i = pattern.index(after: i)
-                }
-                regex += charClass
-            } else {
-                let specialChars = "\\^$.|+(){}"
-                if specialChars.contains(char) {
-                    regex.append("\\")
-                }
-                regex.append(char)
-                i = pattern.index(after: i)
-            }
-        }
-        return regex
-    }
-
-}
-
-/// Test helper that allows direct access to IgnoreMatcher internals
-class DirectlyAccessibleIgnoreMatcher: IgnoreMatcher {
-    /// Add a test pattern directly to the default patterns
-    func addTestPattern(_ pattern: String) {
-        // デバッグのためにパターンの追加をログ出力
-        print("Adding pattern: \(pattern) to default patterns")
-        defaultPatterns.append(pattern)
-    }
-    
-    /// Get patterns for a specific directory
-    func getTestPatterns(forDirectory dir: String) -> [String]? {
-        return ignorePatterns[dir]
-    }
-}
-
-/// Mock logger for testing
-class MockLogger {
-    private var logs: [String] = []
-    
-    func log(_ message: String) {
-        logs.append(message)
-    }
-    
-    func contains(_ substring: String) -> Bool {
-        return logs.contains { log in
-            log.contains(substring)
-        }
     }
 }
