@@ -13,16 +13,12 @@ let package = Package(
 //            targets: ["cxt"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser.git", branch: "main"),
-        .package(url: "https://github.com/1amageek/SwiftAgent.git", branch: "main")
+        .package(url: "https://github.com/apple/swift-argument-parser.git", branch: "main")
     ],
     targets: [
         .executableTarget(name: "cxt",
                           dependencies: [
-            .product(name: "ArgumentParser", package: "swift-argument-parser"),
-            .product(name: "SwiftAgent", package: "SwiftAgent"),
-            .product(name: "Agents", package: "SwiftAgent"),
-            .product(name: "AgentTools", package: "SwiftAgent"),
+            .product(name: "ArgumentParser", package: "swift-argument-parser")
         ]),
         .testTarget(
             name: "cxtTests",

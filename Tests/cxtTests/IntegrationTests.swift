@@ -104,43 +104,6 @@ struct IntegrationTests {
         #expect(mockLogger.contains("Loaded"))
     }
     
-    @Test("Context agent path filtering")
-    func testContextAgentPathFiltering() {
-        let mockLogger = MockLogger()
-        
-        // Create mock files
-        let mockFiles: [FileInfo] = [
-            FileInfo(url: URL(fileURLWithPath: "/project/src/components/layout/Header.tsx"), relativePath: "src/components/layout/Header.tsx"),
-            FileInfo(url: URL(fileURLWithPath: "/project/src/components/ui/Button.tsx"), relativePath: "src/components/ui/Button.tsx"),
-            FileInfo(url: URL(fileURLWithPath: "/project/src/components/ui/Dialog.tsx"), relativePath: "src/components/ui/Dialog.tsx"),
-            FileInfo(url: URL(fileURLWithPath: "/project/src/app/page.tsx"), relativePath: "src/app/page.tsx"),
-            FileInfo(url: URL(fileURLWithPath: "/project/src/lib/utils.ts"), relativePath: "src/lib/utils.ts")
-        ]
-        
-        // Create file processor
-        let fileProcessor = FileProcessor(
-            logger: mockLogger.log,
-            respectIgnoreFiles: true,
-            additionalPatterns: ["components/ui"]
-        )
-        
-        // Simulate context agent returning paths
-        let agentPaths = ["src/components/layout/Header.tsx", "src/app/page.tsx"]
-        
-        // Extract relevant files
-        let relevantFiles = fileProcessor.extractRelevantFiles(
-            fromPaths: agentPaths,
-            basePath: "/project",
-            allFiles: mockFiles
-        )
-        
-        // Verify result
-        #expect(relevantFiles.count == 2)
-        #expect(relevantFiles.contains { $0.relativePath == "src/components/layout/Header.tsx" })
-        #expect(relevantFiles.contains { $0.relativePath == "src/app/page.tsx" })
-        #expect(!relevantFiles.contains { $0.relativePath == "src/components/ui/Button.tsx" })
-        #expect(!relevantFiles.contains { $0.relativePath == "src/lib/utils.ts" })
-    }
     
     @Test("Content generation maintains integrity")
     func testContentGeneration() {
