@@ -204,4 +204,33 @@ struct IntegrationTests {
         #expect(content.contains("// Mock content for src/app/page.tsx"))
         #expect(content.contains("// Mock content for src/lib/utils.ts"))
     }
+
+    @Test("File list mode processes exact files")
+    func testFileListModeProcessing() {
+        let basePath = FileManager.default.currentDirectoryPath
+        let paths = ["Package.swift", "README.md"]
+
+        let files = paths.map { path in
+            FileInfo(
+                url: URL(fileURLWithPath: basePath).appendingPathComponent(path),
+                relativePath: path
+            )
+        }
+
+        let exts = paths.map { URL(fileURLWithPath: $0).pathExtension.lowercased() }
+            .filter { !$0.isEmpty }
+        let uniqueExts = Array(Set(exts)).sorted()
+
+        let processor = FileProcessor(logger: { _ in })
+        let content = processor.generateContent(
+            files: files,
+            basePath: basePath,
+            extensions: uniqueExts
+        )
+
+        // Verify that only specified files appear in the content
+        #expect(content.contains("# Package.swift"))
+        #expect(content.contains("# README.md"))
+        #expect(!content.contains("# Sources"))
+    }
 }

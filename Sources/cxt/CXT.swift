@@ -23,14 +23,14 @@ struct CXT: AsyncParsableCommand {
     )
     
     @Argument(
-        help: "File extensions to search for (comma-separated, without dots)"
+        help: "File extensions to search for (comma-separated, without dots) or comma-separated file list when directory is omitted"
     )
     var fileExtensions: String
-    
+
     @Argument(
         help: "Directory path to search in (supports ~ for home directory)"
     )
-    var directoryPath: String
+    var directoryPath: String?
     
     @Argument(
         help: "Prompt to identify related files",
@@ -52,112 +52,122 @@ struct CXT: AsyncParsableCommand {
     
     mutating func run() async throws {
         let logger = verbose ? { print($0) } : { _ in }
-        
-        // Parse extensions
-        let extensions = fileExtensions.split(separator: ",").map(String.init)
-        
-        // Resolve directory path
-        let resolvedPath = (directoryPath as NSString).expandingTildeInPath
-        
-        logger("Searching for files with extensions: \(extensions.joined(separator: ", "))")
-        logger("Base directory: \(resolvedPath)")
-        
-        // Parse additional ignore patterns
+
+        func finalize(
+            files: [FileInfo],
+            basePath: String,
+            extensions: [String]
+        ) async throws {
+            let initialContent = fileProcessor.generateContent(
+                files: files,
+                basePath: basePath,
+                extensions: extensions
+            )
+
+            var finalContent = initialContent
+            var processedFiles = files
+
+            if let userPrompt = prompt, !userPrompt.isEmpty {
+                do {
+                    logger("Running context agent with prompt: \(userPrompt)")
+
+                    let context = try await ContextAgent().run(
+                        """
+                        instruction: \(userPrompt)
+
+                        context:
+                        \(initialContent)
+                        """
+                    )
+
+                    logger("Context agent returned \(context.paths.count) paths")
+                    context.paths.forEach { logger("- \($0)") }
+
+                    if !context.paths.isEmpty {
+                        let relevantFiles = fileProcessor.extractRelevantFiles(
+                            fromPaths: context.paths,
+                            basePath: basePath,
+                            allFiles: files
+                        )
+
+                        logger("Identified \(relevantFiles.count) relevant files")
+
+                        finalContent = fileProcessor.generateContent(
+                            files: relevantFiles,
+                            basePath: basePath,
+                            extensions: extensions
+                        )
+
+                        processedFiles = relevantFiles
+
+                        fputs("Filtered content based on context:\n", stderr)
+                        for file in relevantFiles {
+                            fputs("  - \(file.relativePath)\n", stderr)
+                        }
+                    } else {
+                        fputs("Context agent returned no relevant paths\n", stderr)
+                    }
+                } catch {
+                    fputs("Error while running context agent: \(error.localizedDescription)\n", stderr)
+                }
+            }
+
+            #if canImport(AppKit)
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(finalContent, forType: .string)
+            logger("Content copied to clipboard")
+            #endif
+
+            let fileCount = processedFiles.count
+            let extensionsStr = extensions.map { "." + $0 }.joined(separator: ", ")
+            fputs("✨ Done! Processed \(fileCount) files (\(extensionsStr))\n", stderr)
+        }
+
         var additionalPatternsArray: [String] = []
         if let patterns = ignorePatterns {
             additionalPatternsArray = patterns.split(separator: ",").map(String.init)
             logger("Additional ignore patterns: \(additionalPatternsArray.joined(separator: ", "))")
         }
-        
-        // Create file processor (always respect ignore files)
+
         let fileProcessor = FileProcessor(
             logger: logger,
             respectIgnoreFiles: true,
             additionalPatterns: additionalPatternsArray
         )
-        
-        // Scan directory for matching files
-        let files = try fileProcessor.scanDirectory(
-            path: resolvedPath,
-            extensions: extensions
-        )
-        
-        // Generate initial content
-        let initialContent = fileProcessor.generateContent(
-            files: files,
-            basePath: resolvedPath,
-            extensions: extensions
-        )
-        
-        // Final content variable - will be updated if prompt is provided
-        var finalContent = initialContent
-        var processedFiles = files
-        
-        // Process with context agent if prompt is provided
-        if let userPrompt = prompt, !userPrompt.isEmpty {
-            do {
-                logger("Running context agent with prompt: \(userPrompt)")
-                
-                // Get context based on prompt and content
-                let context = try await ContextAgent().run(
-                    """
-                    instruction: \(userPrompt)
-                    
-                    context:
-                    \(initialContent)
-                    """
-                )
-                
-                logger("Context agent returned \(context.paths.count) paths")
-                context.paths.forEach { logger("- \($0)") }
-                
-                // Only proceed if we actually got paths back
-                if !context.paths.isEmpty {
-                    // Extract relevant files based on returned paths
-                    let relevantFiles = fileProcessor.extractRelevantFiles(
-                        fromPaths: context.paths,
-                        basePath: resolvedPath,
-                        allFiles: files
-                    )
-                    
-                    logger("Identified \(relevantFiles.count) relevant files")
-                    
-                    // Generate final content based on relevant files
-                    finalContent = fileProcessor.generateContent(
-                        files: relevantFiles,
-                        basePath: resolvedPath,
-                        extensions: extensions
-                    )
-                    
-                    // Update processed files
-                    processedFiles = relevantFiles
-                    
-                    // Output the filtered paths
-                    fputs("Filtered content based on context:\n", stderr)
-                    for file in relevantFiles {
-                        fputs("  - \(file.relativePath)\n", stderr)
-                    }
-                } else {
-                    fputs("Context agent returned no relevant paths\n", stderr)
-                }
-            } catch {
-                fputs("Error while running context agent: \(error.localizedDescription)\n", stderr)
-                // Continue with original content if context agent fails
+
+        if let dirPath = directoryPath {
+            let extensions = fileExtensions.split(separator: ",").map(String.init)
+            let resolvedPath = (dirPath as NSString).expandingTildeInPath
+
+            logger("Searching for files with extensions: \(extensions.joined(separator: ", "))")
+            logger("Base directory: \(resolvedPath)")
+
+            let files = try fileProcessor.scanDirectory(
+                path: resolvedPath,
+                extensions: extensions
+            )
+
+            try await finalize(files: files, basePath: resolvedPath, extensions: extensions)
+        } else {
+            let basePath = FileManager.default.currentDirectoryPath
+
+            logger("Processing file list: \(fileExtensions)")
+
+            let paths = fileExtensions.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+
+            let files: [FileInfo] = paths.map { path in
+                let expanded = (path as NSString).expandingTildeInPath
+                let absolute = expanded.hasPrefix("/") ? expanded : basePath + "/" + expanded
+                let url = URL(fileURLWithPath: absolute)
+                return FileInfo(url: url, relativePath: path)
             }
+
+            let exts = paths.map { URL(fileURLWithPath: String($0)).pathExtension.lowercased() }.filter { !$0.isEmpty }
+            let uniqueExts = Array(Set(exts)).sorted()
+
+            try await finalize(files: files, basePath: basePath, extensions: uniqueExts)
         }
-        
-        // Copy to clipboard on macOS
-#if canImport(AppKit)
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setString(finalContent, forType: .string)
-        logger("Content copied to clipboard")
-#endif
-        
-        // Generate success message to stderr
-        let fileCount = processedFiles.count
-        let extensionsStr = extensions.map { "." + $0 }.joined(separator: ", ")
-        fputs("✨ Done! Processed \(fileCount) files (\(extensionsStr))\n", stderr)
     }
 }
 

@@ -47,6 +47,10 @@ echo 'export GOOGLE_GENAI_API_KEY=your_api_key_here' >> ~/.zshrc
 ```bash
 cxt <extensions> <directory-path> [prompt] [options]
 ```
+You can also provide a comma-separated list of file paths when no directory path is supplied:
+```bash
+cxt <file1,file2,...> [prompt] [options]
+```
 
 ### Arguments
 
@@ -69,6 +73,9 @@ cxt <extensions> <directory-path> [prompt] [options]
 ```bash
 # Basic: Swift files in current directory
 cxt swift ./
+
+# Explicit file list
+cxt ContentView.swift,README.md,Views/TableCell.swift
 
 # Multiple file types: Swift, Markdown, and JSON files
 cxt swift,md,json ~/Documents
