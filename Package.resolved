@@ -1,24 +1,5 @@
 {
-  "originHash" : "dc3faa9eb8c79f580c6e1c54cd35e722547fa0db4529adbfd979706df8302016",
   "pins" : [
-    {
-      "identity" : "generative-ai-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google-gemini/generative-ai-swift.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "31d3eb8b399deb288373b99953a8dec5c11bcb57"
-      }
-    },
-    {
-      "identity" : "ollamakit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/1amageek/OllamaKit.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "16b30e8f8b2f48dbf169e5ada274478680ea2d8c"
-      }
-    },
     {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
@@ -26,42 +7,6 @@
       "state" : {
         "branch" : "main",
         "revision" : "d67151befa39533a6a449136c7992537cbf8ec99"
-      }
-    },
-    {
-      "identity" : "swift-json-schema",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/1amageek/swift-json-schema.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "ef7c71dcae944c18792a2164501394d111501004"
-      }
-    },
-    {
-      "identity" : "swift-llm-chat-openai",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/1amageek/swift-llm-chat-openai.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "db4c398a13bb4799c51bab8feea109a9aad2e782"
-      }
-    },
-    {
-      "identity" : "swiftagent",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/1amageek/SwiftAgent.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "ec5fc0d66a7626395dcd1ac8e140a90824e8881f"
-      }
-    },
-    {
-      "identity" : "swiftanthropic",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jamesrochabrun/SwiftAnthropic.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "c921b625dcbcc0653343ae63c89d1cbfed0bd539"
       }
     }
   ],
